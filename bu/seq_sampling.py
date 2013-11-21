@@ -57,10 +57,10 @@ def collect(seqs, fraction=0.8):
         
     return seqs
 
-def sample_all(seqs):
+def sample_all(seqs, fraction=0.8):
     result_seqs = []
     for seq in seqs:
         seq.start_position = 0
-        result_seqs += collect(shuffle(shatter(seq)))
+        result_seqs += collect(shuffle(shatter(seq)), fraction)
     return result_seqs
     
