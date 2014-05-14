@@ -7,10 +7,12 @@ or equal to the length threshold parameter."""
 import argparse
 import sys
 from Bio import SeqIO
+
 def main(args):
+    seqs = []
     for i, seq in enumerate(SeqIO.parse(args.fasta_file, "fasta")):
         if len(seq) >= args.length_threshold:
-            seqs.append(seqs)
+            seqs.append(seq)
     if args.output_file:
         with open(args.output_file, 'w') as ofh:
             SeqIO.write(seqs, ofh, 'fasta')
@@ -20,7 +22,7 @@ def main(args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("fasta_file", help="Input Fasta file.")
-    parser.add_argument("-l", "--length_threshold", help="Length trheshold to filter on.")
+    parser.add_argument("-l", "--length_threshold", type=int, help="Length trheshold to filter on.")
     parser.add_argument('-o', '--output_file',
         help=("Optional output file where sequences will be printed." 
             " Otherwise use stdout."))
