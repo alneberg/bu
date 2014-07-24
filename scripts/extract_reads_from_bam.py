@@ -37,7 +37,7 @@ def main(args):
 
 def print_reads(reads_to_print):
     # Fetch using the pyfaidx fasta object
-    seq_iter = (SeqRecord(Seq(aln.seq), id=aln.qname, description="") for aln in reads_to_print)
+    seq_iter = (SeqRecord(Seq(aln.seq).reverse_complement() if aln.is_reverse else Seq(aln.seq), id=aln.qname, description="") for aln in reads_to_print)
     SeqIO.write(seq_iter, sys.stdout, "fasta")
 
 if __name__ == "__main__":
