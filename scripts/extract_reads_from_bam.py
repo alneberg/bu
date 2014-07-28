@@ -1,11 +1,9 @@
 #!/usr/bin/env python
 """extract_reads_from_bam.py 
 
-Extract all sequences from a fasta file that are 
-present in a bamfile. To read from the fasta file
-in an efficient manner it will be indexed, if it
-not already is. This will produce a .fai file
-for the fasta file."""
+Extract all read pairs in a bam file where at 
+least one of the mates are aligned to the references.
+"""
 
 import argparse
 import sys
@@ -17,16 +15,17 @@ from pysam import Samfile
 def main(args):
     option = "r" if args.samformat else "rb"
     samfile = Samfile(args.bamfile, "rb")
-
+    ref_ids = [samfile.gettid(r) for r in samfile.references]
     #Iterates over each read instead of each contig
     reads_to_print = []
     for aln in samfile.fetch(until_eof = True):
-        if args.read_pair == 1 and aln.is_read1:
-            reads_to_print.append(aln)
-        elif args.read_pair == 2 and aln.is_read2:
-            reads_to_print.append(aln)
-        elif args.read_pair == 0:
-            reads_to_print.append(aln)
+        if pair_is_aligned(aln, ref_ids):
+            if args.read_pair == 1 and aln.is_read1:
+                reads_to_print.append(aln)
+            elif args.read_pair == 2 and aln.is_read2:
+                reads_to_print.append(aln)
+            elif args.read_pair == 0:
+                reads_to_print.append(aln)
 
         if len(reads_to_print) >= 10000:
             # Flush the reads collected
@@ -34,6 +33,9 @@ def main(args):
             reads_to_print = []
 
     print_reads(reads_to_print)
+
+def pair_is_aligned(aln, ref_ids):
+    return aln.tid in ref_ids or aln.rnext in ref_ids
 
 def print_reads(reads_to_print):
     # Fetch using the pyfaidx fasta object
