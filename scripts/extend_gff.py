@@ -79,7 +79,7 @@ def extend_record(row, feature_blast_hit):
     rec = GFF_feature_rec(row)
     if rec.ID and rec.ID in feature_blast_hit:
         new_xref = feature_blast_hit[rec.ID]
-        row += ";" + new_xref
+        row += ";Dbxref=" + new_xref
     return row
 
 def translate_from_cdd(feature_blast_hits, cdd_all_file, include_evalue, include_pident):
