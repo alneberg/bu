@@ -60,18 +60,27 @@ def extend_record(rec, feature_blast_hit):
             raise Exception("Multiple locus tags found for {0}".format(rec.id))
         feature_id = feature.qualifiers['locus_tag'][0]
         if feature_id in feature_blast_hit:
+            new_xref = feature_blast_hit[feature_id]
             if 'db_xref' in feature.qualifiers:
                 feature.qualifiers['db_xref'].append(feature_blast_hit[feature_id])
             else:
                 feature.qualifiers['db_xref'] = [feature_blast_hit[feature_id]]
     return rec
 
-def translate_from_cdd(feature_blast_hits, cdd_all_file):
+def translate_from_cdd(feature_blast_hits, cdd_all_file, include_evalue, include_pident):
     with open(cdd_all_file, 'r') as cf:
          cddid_d = dict([(row.split('\t')[0], row.split('\t')[1].strip()) for row in cf.readlines()])
-    return dict([(k, cddid_d[v['sseqid'].split('|')[-1]]) for k,v in feature_blast_hits.iteritems()])
+         preformatted_dict = {}
+         for k, v in feature_blast_hits.iteritems():
+             new_val = cddid_d[v['sseqid'].split('|')[-1]]
+             if include_evalue:
+                 new_val += ",evalue:{0}".format(v['evalue'])
+             if include_pident:
+                 new_val += ",pident:{0}".format(v['pident'])
+             preformatted_dict[k] = new_val
+    return preformatted_dict 
 
-def main(blastoutfile, genbankfile, scovs_threshold, evalue_threshold, cddid_all_file):
+def main(blastoutfile, genbankfile, scovs_threshold, evalue_threshold, cddid_all_file, include_evalue, include_pident):
     # Read the blast output
     blast_records, sseq_ids = read_blast_output(blastoutfile)
 
@@ -83,7 +92,7 @@ def main(blastoutfile, genbankfile, scovs_threshold, evalue_threshold, cddid_all
     feature_blast_hits =  dict([(blast_r['qseqid'], blast_r) for blast_r in blast_records])    
 
     # We only want the translated cdd in the resulting genbank file
-    translated_blast_hits = translate_from_cdd(feature_blast_hits, cddid_all_file)
+    translated_blast_hits = translate_from_cdd(feature_blast_hits, cddid_all_file, include_evalue, include_pident)
 
     new_genbank = []
     for rec in SeqIO.parse(genbankfile, 'genbank'):
@@ -112,10 +121,18 @@ if __name__ == "__main__":
            'accessions. Used to find e.g. Pfam and TIGRFAM ids given the '
            'the CDD ids. '
            'Downloaded from: ftp://ftp.ncbi.nih.gov/pub/mmdb/cdd/cddid_all.tbl.gz'))
+   parser.add_argument('--include-evalue', action='store_true',
+           help = ('Use this tag if evalue is supposed to be in the db_xref '
+               'tag along side the translated CDD id.'))
+   parser.add_argument('--include-pident', action='store_true',
+           help = ('Use this tag if pident is supposed to be in the db_xref ' 
+               'tag along side the translated CDD id.'))
    args = parser.parse_args()
 
    main(args.blastoutfile, 
         args.gbkfile, 
         args.scovs_threshold, 
         args.evalue_threshold, 
-        args.cddid_all_file)
+        args.cddid_all_file,
+        args.include_evalue,
+        args.include_pident)
