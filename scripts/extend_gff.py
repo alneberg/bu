@@ -71,15 +71,22 @@ class GFF_feature_rec(object):
             self.ID = ID.split('=')[1]
         
 
-def extend_record(row, feature_blast_hit):
+def extend_record(row, feature_blast_hit, prokka=False):
     """
     extends record rec with the feature feature_blast_hit if 
     not already present in record.
     """
     rec = GFF_feature_rec(row)
-    if rec.ID and rec.ID in feature_blast_hit:
-        new_xref = feature_blast_hit[rec.ID]
-        row += ";Dbxref=" + new_xref
+    if rec.ID:
+        new_xref = None
+        if prokka and rec.ID in feature_blast_hit:
+            new_xref = feature_blast_hit[rec.ID]
+        elif not prokka:
+            prodigal_rec_id = rec.seqid + '_' + rec.ID.split('_')[-1] 
+            if prodigal_rec_id in feature_blast_hit:
+                new_xref = feature_blast_hit[prodigal_rec_id]
+        if new_xref is not None:
+            row += ";Dbxref=" + new_xref
     return row
 
 def translate_from_cdd(feature_blast_hits, cdd_all_file, include_evalue, include_pident):
