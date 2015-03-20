@@ -26,13 +26,13 @@ def main(args):
                 reads_to_print.append(aln)
             elif args.read_pair == 0:
                 reads_to_print.append(aln)
-
         if len(reads_to_print) >= 10000:
             # Flush the reads collected
             print_reads(reads_to_print)
             reads_to_print = []
 
     print_reads(reads_to_print)
+
 
 def pair_is_aligned(aln, ref_ids):
     return aln.tid in ref_ids or aln.rnext in ref_ids
