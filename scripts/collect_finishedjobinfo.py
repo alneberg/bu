@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 """Script to collect finishedjobinfo statistics for
    nextflow pipelines ran on uppmax."""
-
+from __future__ import print_function
+import sys
 import re
 import os
 import shutil
@@ -12,12 +13,12 @@ DETAILS_DEST_FILE = "{node}_{jobid}.stats"
 
 def main(args):
     # Check clustername
-    hostname = os.environ.get(['HOSTNAME'])
+    hostname = os.environ.get('HOSTNAME')
     if 'uppmax' not in hostname:
         raise Exception("This script only works on uppmax, sorry!")
 
     clustername_with_nr = hostname.replace('uppmax.uu.se', '')
-    clustername = clustername_with_nr[:-1]
+    clustername = clustername_with_nr[:-2]
     # Fetch the slurmid from the nextflow log
     # TODO
 
@@ -35,7 +36,7 @@ def main(args):
             jobinfo.append((jobid, node))
 
     # fetch the extended run info for each individual job
-    for jobid, node in jobinfo.items():
+    for jobid, node in jobinfo:
         src = DETAILS_PATH.format(clustername=clustername,
                                   node=node,
                                   jobid=jobid)
@@ -43,8 +44,11 @@ def main(args):
         dest = os.path.join(args.outdir, DETAILS_DEST_FILE.format(node=node,
                                                                   jobid=jobid))
         # copy the runinfo to a directory (since it is cleared out regularly)
-        print("Copying, {}, {}".format(src, dest))
-        shutil.copy(src, dest)
+        if os.path.isfile(src):
+            print("Copying, {}, {}".format(src, dest), file=sys.stderr)
+            shutil.copy(src, dest)
+        else:
+            print("No such job: {}, either the job is too old or it executed very quickly".format(jobid), file=sys.stderr)
 
 if __name__=="__main__":
     parser = ArgumentParser(description=__doc__)
