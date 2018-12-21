@@ -1,4 +1,4 @@
-VERSION=10
+VERSION=11
 ACCOUNTID=$AWS_ACCOUNT_ID
 SERVICEROLE=AWSBatchServiceRole
 IAMFLEETROLE=AmazonEC2SpotFleetRole
@@ -11,21 +11,22 @@ KEYNAME=Johannes_AWS
 MAXCPU=256 # max vCPUs in compute environment
 INSTANCETYPES=optimal
 COMPUTE_ENV=Sarek_pricing_benchmark_${VERSION}
-TAGS={Sarek-benchmark-compute=${VERSION},Sarek-benchmark=${VERSION}}
+TAGS={sarek_benchmark_compute=${VERSION},sarek_benchmark=${VERSION}}
+REGION="eu-west-1"
 
 # Create regular compute env and queue
-aws batch create-compute-environment --compute-environment-name $COMPUTE_ENV --type MANAGED --state ENABLED --service-role ${SERVICEROLE} --compute-resources type=SPOT,minvCpus=0,maxvCpus=$MAXCPU,desiredvCpus=0,instanceTypes=$INSTANCETYPES,imageId=$IMAGEID,subnets=$SUBNETS,securityGroupIds=$SECGROUPS,ec2KeyPair=$KEYNAME,instanceRole=$INSTANCEROLE,bidPercentage=$SPOTPER,spotIamFleetRole=$IAMFLEETROLE,tags=$TAGS
+aws batch create-compute-environment --region $REGION --compute-environment-name $COMPUTE_ENV --type MANAGED --state ENABLED --service-role ${SERVICEROLE} --compute-resources type=SPOT,minvCpus=0,maxvCpus=$MAXCPU,desiredvCpus=0,instanceTypes=$INSTANCETYPES,imageId=$IMAGEID,subnets=$SUBNETS,securityGroupIds=$SECGROUPS,ec2KeyPair=$KEYNAME,instanceRole=$INSTANCEROLE,bidPercentage=$SPOTPER,spotIamFleetRole=$IAMFLEETROLE,tags=$TAGS
 
 sleep 5
 
-aws batch create-job-queue --job-queue-name $COMPUTE_ENV --state ENABLED --priority 1 --compute-environment-order "order=1,computeEnvironment=$COMPUTE_ENV"
+aws batch create-job-queue --region $REGION --job-queue-name $COMPUTE_ENV --state ENABLED --priority 1 --compute-environment-order "order=1,computeEnvironment=$COMPUTE_ENV"
 
 # Create tiny compute env and queue
 INSTANCETYPES="r4.large"
 COMPUTE_ENV=${COMPUTE_ENV}_tiny
 
-aws batch create-compute-environment --compute-environment-name $COMPUTE_ENV --type MANAGED --state ENABLED --service-role ${SERVICEROLE} --compute-resources type=SPOT,minvCpus=0,maxvCpus=$MAXCPU,desiredvCpus=0,instanceTypes=$INSTANCETYPES,imageId=$IMAGEID,subnets=$SUBNETS,securityGroupIds=$SECGROUPS,ec2KeyPair=$KEYNAME,instanceRole=$INSTANCEROLE,bidPercentage=$SPOTPER,spotIamFleetRole=$IAMFLEETROLE,tags=$TAGS
+aws batch create-compute-environment --region $REGION --compute-environment-name $COMPUTE_ENV --type MANAGED --state ENABLED --service-role ${SERVICEROLE} --compute-resources type=SPOT,minvCpus=0,maxvCpus=$MAXCPU,desiredvCpus=0,instanceTypes=$INSTANCETYPES,imageId=$IMAGEID,subnets=$SUBNETS,securityGroupIds=$SECGROUPS,ec2KeyPair=$KEYNAME,instanceRole=$INSTANCEROLE,bidPercentage=$SPOTPER,spotIamFleetRole=$IAMFLEETROLE,tags=$TAGS
 
 sleep 5
 
-aws batch create-job-queue --job-queue-name $COMPUTE_ENV --state ENABLED --priority 1 --compute-environment-order "order=1,computeEnvironment=$COMPUTE_ENV"
+aws batch create-job-queue --region $REGION --job-queue-name $COMPUTE_ENV --state ENABLED --priority 1 --compute-environment-order "order=1,computeEnvironment=$COMPUTE_ENV"
