@@ -7,13 +7,16 @@
 # Not including xvda as this is the root partition
 xvds=$(sudo lsblk | awk '/^xvd[b-j]/ {printf "/dev/%s ", $1} ')
 sudo mdadm --create --verbose /dev/md0 --level=0 --name=my_raid --raid-devices=$(echo $xvds | wc -w) $xvds
-sleep 10# crutch
+sleep 10; 
 # Check if the file system exists (the instance might have been up for some time already)
 fs_check=`sudo file -s /dev/md0`
-if [ $fs_check = "/dev/md0: data" ]; then
+if [[ $fs_check = "/dev/md0: data" ]]; then
     sudo mkfs.ext4 -L my_raid /dev/md0
     sudo mdadm --detail --scan | sudo tee -a /etc/mdadm.conf
     sudo dracut -H -f /boot/initramfs-$(uname -r).img $(uname -r)
+else
+    # In case this job was started at the same time as the first one
+    sleep 10;
 fi
 sudo mkdir /data
 sudo mount LABEL=my_raid /data
