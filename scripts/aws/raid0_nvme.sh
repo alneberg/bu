@@ -5,8 +5,8 @@
 # https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/raid-config.html
 
 # Not including xvda as this is the root partition
-xvds=$(sudo lsblk | awk '/^xvd[b-j]/ {printf "/dev/%s ", $1} ')
-sudo mdadm --create --verbose /dev/md0 --level=0 --name=my_raid --raid-devices=$(echo $xvds | wc -w) $xvds
+nvmes=$(sudo lsblk | awk '/^nvme/ {printf "/dev/%s ", $1} ')
+sudo mdadm --create --verbose /dev/md0 --level=0 --name=my_raid --raid-devices=$(echo $nvmes | wc -w) $nvmes
 sleep 10; 
 # Check if the file system exists (the instance might have been up for some time already)
 fs_check=`sudo file -s /dev/md0`
