@@ -1,11 +1,11 @@
 set -e
-WORKDIR="s3://sarek-work-benchmark-2/work_121221"
-OUTDIR="s3://sarek-results-benchmark-2/results_121221"
+WORKDIR="s3://sarek-work-benchmark-4/work_190115"
+OUTDIR="s3://sarek-results-benchmark-4/results_190115"
 GENOME_BASE="s3://ngi-igenomes/igenomes/Homo_sapiens/GATK/GRCh38"
-AWS_QUEUE="Sarek_pricing_benchmark_11"
-AWS_QUEUE_TINY="Sarek_pricing_benchmark_11_tiny"
-REPORT_DIR="../Reports_dream_121221"
-MAIN_SAMPLE_TSV="Sarek-data/testdata/tsv/dream-test-s3.tsv"
+AWS_QUEUE="Sarek_pricing_benchmark_15"
+AWS_QUEUE_TINY="Sarek_pricing_benchmark_15"
+REPORT_DIR="../Reports_dream_190115"
+MAIN_SAMPLE_TSV="Sarek-data/testdata/tsv/dream-test-normal-s3.tsv"
 GENOME="GRCh38"
 
 #Comment away this when running real data
@@ -16,12 +16,14 @@ GENOME="GRCh38"
 #MAIN_SAMPLE_TSV="Sarek-data/testdata/tsv/tiny-s3.tsv"
 #GENOME="smallGRCh37"
 
-COMMON_PARAMS="-profile awsbatch --awsqueue $AWS_QUEUE --awsqueue_tiny $AWS_QUEUE_TINY -work-dir $WORKDIR --outDir $OUTDIR --verbose -resume"
+COMMON_PARAMS="-profile awsbatch -c extra_config.json --awsqueue $AWS_QUEUE --awsqueue_tiny $AWS_QUEUE_TINY -work-dir $WORKDIR --outDir $OUTDIR --verbose -resume"
 
 
 STEP=main
 echo $STEP
-nextflow run main.nf $COMMON_PARAMS --localReportDir ${REPORT_DIR}_${STEP} --sample $MAIN_SAMPLE_TSV  --genome $GENOME --genome_base $GENOME_BASE 
+CMD="nextflow run main.nf $COMMON_PARAMS --localReportDir ${REPORT_DIR}_${STEP} --sample $MAIN_SAMPLE_TSV  --genome $GENOME --genome_base $GENOME_BASE"
+echo $CMD
+$CMD
 
 STEP=germlineVC
 echo $STEP
