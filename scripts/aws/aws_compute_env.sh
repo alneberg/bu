@@ -1,15 +1,15 @@
-VERSION=15
+VERSION=16
 ACCOUNTID=$AWS_ACCOUNT_ID
 SERVICEROLE=AWSBatchServiceRole
 IAMFLEETROLE=AmazonEC2SpotFleetRole
 SUBNETS=subnet-060e7d16f46ef3bd2,subnet-04cbdc281a40159ce,subnet-09c7a62f5f47124f0
 SECGROUPS=sg-0e0d5e87597682f99
 SPOTPER=50 # percentage of on demand
-IMAGEID=ami-018adc348cc2bad99
+IMAGEID=ami-075ac13b06d2e69b9
 INSTANCEROLE=ecsInstanceRole
 KEYNAME=Johannes_AWS
 MAXCPU=256 # max vCPUs in compute environment
-INSTANCETYPES="i3"
+INSTANCETYPES="m5d"
 COMPUTE_ENV=Sarek_pricing_benchmark_${VERSION}
 TAGS={sarek_benchmark_compute=${VERSION},sarek_benchmark=${VERSION}}
 REGION="eu-west-1"
