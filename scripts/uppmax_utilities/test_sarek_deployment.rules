@@ -1,0 +1,44 @@
+# Snakemake rules to test a Sarek deployment
+# Create the directory for the run first
+# and run this script within that directory.
+
+samples = ["1234N", "9876T", "9877R"]
+
+rule link_to_sarek:
+    output:
+        "sarek"
+    shell:
+        """
+            ln -s $(readlink -f /lupus/ngi/staging/latest/)/sw/sarek .
+        """
+
+rule link_to_sarek_data:
+    input:
+        "sarek"
+    output:
+        "Sarek-data"
+    shell:
+        """
+            ln -s $(readlink -f sarek)/Sarek-data .
+        """
+
+# Temporary solution since we don't want to build the reference
+# if not available in home, you have to build it.
+rule link_to_smallGRCh37_reference:
+    output:
+        "References"
+    shell:
+        """
+            ln -s $HOME/References .
+        """
+
+rule preprocessing:
+    input:
+        "sarek", 
+        "Sarek-data", 
+        "References"
+    output:
+        expand("Preprocessing/Recalibrated/{sample}.recal.{ext}", sample=samples, ext=['bam', 'bai']),
+        expand("Reports/bamQC/{sample}/qualimapReport.html", sample=samples)
+    shell:
+        """nextflow run sarek/main.nf --sample Sarek-data/testdata/tsv/tiny.tsv -profile slurm --project ngi2016004 --genome smallGRCh37"""
