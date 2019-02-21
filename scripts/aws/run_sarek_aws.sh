@@ -1,10 +1,10 @@
 set -e
-WORKDIR="s3://sarek-work-benchmark/work_190205"
-OUTDIR="s3://sarek-result-benchmark/results_190205"
+WORKDIR="s3://sarek-work-benchmark/work_190219"
+OUTDIR="s3://sarek-result-benchmark/results_190219"
 GENOME_BASE="s3://ngi-igenomes/igenomes/Homo_sapiens/GATK/GRCh38"
 AWS_QUEUE="Sarek_pricing_benchmark_17"
 AWS_QUEUE_TINY="Sarek_pricing_benchmark_17"
-REPORT_DIR="../Reports_dream_m5d_190205"
+REPORT_DIR="../Reports_dream_m5d_190219"
 MAIN_SAMPLE_TSV="Sarek-data/testdata/tsv/dream-test-normal-s3.tsv"
 GENOME="GRCh38"
 
@@ -16,7 +16,7 @@ GENOME="GRCh38"
 #MAIN_SAMPLE_TSV="Sarek-data/testdata/tsv/tiny-s3.tsv"
 #GENOME="smallGRCh37"
 
-COMMON_PARAMS="-profile awsbatch --awsqueue $AWS_QUEUE --awsqueue_tiny $AWS_QUEUE_TINY -work-dir $WORKDIR --outDir $OUTDIR --verbose -resume"
+COMMON_PARAMS="-profile awsbatch --awsqueue $AWS_QUEUE --awsqueue_tiny $AWS_QUEUE_TINY -work-dir $WORKDIR --outDir $OUTDIR --verbose -resume -dump-channels"
 
 
 STEP=main
