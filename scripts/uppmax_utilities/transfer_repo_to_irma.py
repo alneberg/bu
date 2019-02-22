@@ -69,6 +69,7 @@ def main(args):
     remote_archive_path = ospj(remote_dir, archive)
     remote_extracted_path = remote_archive_path.replace('.tar.gz', '')
     if not exists(c, remote_extracted_path):
+        logger.info("Extracted archive does not exist remotely. Uploading")
         c.run('mkdir {}'.format(remote_extracted_path))
         c.run('tar -xvzf {} -C {}'.format(remote_archive_path, remote_extracted_path))
 
@@ -78,6 +79,7 @@ def main(args):
     else:
         link_name = "{}_latest".format(dirname)
     c.run('cd {}; ln -sfn {} {}'.format(remote_dir, remote_extracted_path, link_name))
+    logger.info("Linking: {} {}".format(remote_extracted_path, link_name))
     logger.info("{} successfully linked as the new {}".format(dirname, link_name))
 
 if __name__ == '__main__':
