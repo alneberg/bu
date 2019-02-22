@@ -8,6 +8,7 @@ import os
 from os.path import join as ospj
 import sys
 from fabric import Connection
+from patchwork.files import exists
 from git import Repo
 import coloredlogs
 import logging
@@ -67,15 +68,16 @@ def main(args):
     c = Connection('irma')     
     remote_archive_path = ospj(remote_dir, archive)
     remote_extracted_path = remote_archive_path.replace('.tar.gz', '')
-    c.run('mkdir {}'.format(remote_extracted_path))
-    c.run('tar -xvzf {} -C {}'.format(remote_archive_path, remote_extracted_path))
+    if not exists(c, remote_extracted_path):
+        c.run('mkdir {}'.format(remote_extracted_path))
+        c.run('tar -xvzf {} -C {}'.format(remote_archive_path, remote_extracted_path))
 
     # Create a link from dev or latest to the new archive
     if args.mode == 'dev': 
         link_name = "{}_dev".format(dirname)
     else:
         link_name = "{}_latest".format(dirname)
-    c.run('cd {}; ln -sf {} {}'.format(remote_dir, remote_extracted_path, link_name))
+    c.run('cd {}; ln -sfn {} {}'.format(remote_dir, remote_extracted_path, link_name))
     logger.info("{} successfully linked as the new {}".format(dirname, link_name))
 
 if __name__ == '__main__':
