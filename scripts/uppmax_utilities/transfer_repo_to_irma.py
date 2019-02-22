@@ -72,6 +72,8 @@ def main(args):
         logger.info("Extracted archive does not exist remotely. Uploading")
         c.run('mkdir {}'.format(remote_extracted_path))
         c.run('tar -xvzf {} -C {}'.format(remote_archive_path, remote_extracted_path))
+    else:
+        logger.info("Extracted archive already exists remotely: {}".format(c.run('ls -l {}'.format(remote_dir))))
 
     # Create a link from dev or latest to the new archive
     if args.mode == 'dev': 
