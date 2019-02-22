@@ -52,8 +52,11 @@ def main(args):
     logger.info("Creating repo archive {}".format(archive_name))
     archive = "{0}.tar.gz".format(archive_name)
     archive_path = ospj(args.repo, archive)
-    with open(archive_path, 'wb') as fh:
-        repo.archive(fh, format='tar.gz')
+
+    run_dir = os.getcwd()
+    os.chdir(args.repo)
+    os.system("git-archive-all {}".format(archive))
+    os.chdir(run_dir)
 
     logger.info("Archive created.")
 
@@ -69,8 +72,7 @@ def main(args):
     remote_extracted_path = remote_archive_path.replace('.tar.gz', '')
 
     c.run('rm -r {} || true'.format(remote_extracted_path))
-    c.run('mkdir {}'.format(remote_extracted_path))
-    c.run('tar -xvzf {} -C {}'.format(remote_archive_path, remote_extracted_path))
+    c.run('cd {}; tar -xvzf {}'.format(remote_dir, remote_archive_path))
 
     # Create a link from dev or latest to the new archive
     if args.mode == 'dev': 
