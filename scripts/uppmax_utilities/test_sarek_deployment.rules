@@ -2,7 +2,20 @@
 # Create the directory for the run first
 # and run this script within that directory.
 
-samples = ["1234N", "9876T", "9877R"]
+sample_dict = {'tiny': ["1234N", "9876T", "9877R"], 
+               'dream_n': ["DREAM_N_1", "DREAM_N_2", "DREAM_N_3", "DREAM_N_4", "DREAM_N_5"], 
+               'dream_all': ["DREAM_N_1", "DREAM_N_2", "DREAM_N_3", "DREAM_N_4", "DREAM_N_5", "DREAM_T_1", "DREAM_T_2", "DREAM_T_3", "DREAM_T_4", "DREAM_T_5"]}
+
+samples = sample_dict[config['sample_set']]
+
+tsvs = {'tiny': 'Sarek-data/testdata/tsv/tiny.tsv', 'dream_n': 'data/dream_normal.tsv', 'dream_all': 'data/dream_all.tsv'}
+genome_params = {'tiny': "--genome smallGRCh37 --genome_base References/smallGRCh37", \
+                 'dream_n': "--genome GRCh38 --genome_base /sw/data/uppnex/ToolBox/hg38bundle", \
+                 'dream_all': "--genome GRCh38 --genome_base /sw/data/uppnex/ToolBox/hg38bundle"}
+
+if ('dream' in config['sample_set']) and (not os.path.exists('data/dream_normal.tsv')):
+    sys.stderr.write("Dream dataset not available, please run 'ln -s /lupus/proj/ngi2016004/private/johannes/raw_data/dream_test_data data'")
+    sys.exit(-1)
 
 rule link_to_sarek:
     output:
@@ -29,16 +42,66 @@ rule link_to_smallGRCh37_reference:
         "References"
     shell:
         """
-            ln -s $HOME/References .
+            ln -s $HOME/Sarek/References .
         """
 
 rule preprocessing:
     input:
-        "sarek", 
-        "Sarek-data", 
-        "References"
+        sarek_dir="sarek", 
+        references="References",
+        data_dir="Sarek-data"
     output:
         expand("Preprocessing/Recalibrated/{sample}.recal.{ext}", sample=samples, ext=['bam', 'bai']),
-        expand("Reports/bamQC/{sample}/qualimapReport.html", sample=samples)
+        expand("Reports/bamQC/{sample}/qualimapReport.html", sample=samples),
+        tsv = "Preprocessing/Recalibrated/recalibrated.tsv"
+    params:
+        genome_params = lambda wildcards: genome_params[config['sample_set']],
+        tsv=lambda wc: tsvs[config['sample_set']]
     shell:
-        """nextflow run sarek/main.nf --sample Sarek-data/testdata/tsv/tiny.tsv -profile slurm --project ngi2016004 --genome smallGRCh37"""
+        """
+           nextflow run sarek/main.nf -resume --sample {params.tsv} -profile slurm --project ngi2016004 {params.genome_params}
+        """
+
+rule germlinevc:
+    input: rules.preprocessing.output.tsv
+    output:
+        expand("VariantCalling/HaplotypeCaller/haplotypecaller_{sample}.vcf.{ext}", sample=samples, ext=['gz', 'gz.tbi'])
+    params:
+        genome_params = lambda wildcards: genome_params[config['sample_set']]
+    shell:
+        """
+           nextflow run sarek/germlineVC.nf -resume --sample {input} -profile slurm --project ngi2016004 {params.genome_params} --tools HaplotypeCaller,Manta,Strelka
+        """
+
+rule annotation:
+    input: rules.germlinevc.output
+    output:
+        expand("Annotation/SnpEff/haplotypecaller_{sample}_snpEff.{ext}", \
+			sample=samples, ext=['ann.vcf.gz', 'ann.vcf.gz.tbi', 'genes.txt', 'summary.html']),
+        expand("Annotation/SnpEff/Strelka_{sample}_variants_snpEff.{ext}", \
+			sample=samples, ext=['ann.vcf.gz', 'ann.vcf.gz.tbi', 'genes.txt', 'summary.html']),
+	expand("Annotation/VEP/haplotypecaller_{sample}_VEP.{ext}", \
+			sample=samples, ext=['ann.vcf.gz', 'ann.vcf.gz.tbi', 'summary.html']),
+	expand("Annotation/VEP/Strelka_{sample}_variants_VEP.{ext}", \
+			sample=samples, ext=['ann.vcf.gz', 'ann.vcf.gz.tbi', 'summary.html'])
+    params:
+        genome_params = lambda wildcards: genome_params[config['sample_set']]
+    shell:
+        """
+           nextflow run sarek/annotate.nf -resume --annotateTools HaplotypeCaller,Strelka -profile slurm --project ngi2016004 {params.genome_params} --tools snpEff,VEP
+        """
+
+rule multiqc:
+    input: rules.annotation.output
+    output:
+        "Reports/MultiQC/multiqc_report.html",
+        "Reports/MultiQC/multiqc_data/multiqc_data.json"
+    params:
+        genome_params = lambda wildcards: genome_params[config['sample_set']]
+    shell:
+        """
+           nextflow run -resume sarek/runMultiQC.nf -profile slurm --project ngi2016004 {params.genome_params}
+        """
+
+rule all:
+    input: rules.preprocessing.output, rules.germlinevc.output,	rules.annotation.output, rules.multiqc.output
