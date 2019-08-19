@@ -75,6 +75,7 @@ def main(args):
         link_name = "{}_dev".format(dirname)
     else:
         link_name = "{}_latest".format(dirname)
+    c.run('cd {}; rm {}'.format(remote_dir, link_name))
     c.run('cd {}; ln -s {} {}'.format(remote_dir, remote_extracted_path, link_name))
     logger.info("{} successfully linked as the new {}".format(dirname, link_name))
 
